@@ -1,10 +1,10 @@
 'use client';
 import { signIn } from 'next-auth/react';
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Logo from '@/components/Logo';
 
-export default function LoginPage() {
+function LoginForm() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [erro, setErro] = useState('');
@@ -36,9 +36,7 @@ export default function LoginPage() {
         className="card p-8 sm:p-10 w-full max-w-md space-y-6 relative z-10 shadow-lift animate-slide-up"
       >
         <div className="flex justify-center">
-          <div className="flex justify-center">
-           <Logo size={80} showTagline={false} />
-        </div>
+          <Logo size={80} showTagline={false} />
         </div>
 
         <div className="text-center space-y-1">
@@ -107,5 +105,24 @@ export default function LoginPage() {
         </p>
       </form>
     </div>
+  );
+}
+
+// 🎯 O componente que usa useSearchParams PRECISA estar dentro de <Suspense>
+// para o Next.js conseguir pré-renderizar a página no build de produção.
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 via-white to-brand-50">
+          <div className="text-center">
+            <div className="w-10 h-10 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin mx-auto" />
+            <p className="mt-3 text-sm text-ink-500">Carregando...</p>
+          </div>
+        </div>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
