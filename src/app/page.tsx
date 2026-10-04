@@ -76,10 +76,11 @@ export default function HomePage() {
               ⚡ Retirada rápida no local
             </span>
             <h1 className="text-3xl sm:text-5xl font-extrabold text-white tracking-tight leading-tight">
-              Tá na correria do dia a dia? 🚗💨
+              Olá, Seja Bem-Vindo(a),
             </h1>
             <p className="mt-4 text-white/90 text-lg max-w-2xl">
-              Aproveite o tempo de estampagem para conhecer nossa lojinha! Produtos
+              Tá na correria do dia a dia? 🚗💨
+              Aproveite esse tempinho para conhecer nossa lojinha! Produtos
               selecionados, preços especiais e retirada rápida.
             </p>
 
