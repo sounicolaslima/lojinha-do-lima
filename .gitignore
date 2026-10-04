@@ -1,0 +1,45 @@
+# Dependências
+node_modules
+.pnp
+.pnp.js
+
+# Next.js
+.next/
+out/
+build/
+dist/
+
+# Variáveis de ambiente (NUNCA COMITAR)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Banco de dados SQLite local
+prisma/dev.db
+prisma/dev.db-journal
+
+# Uploads locais
+public/uploads/*
+!public/uploads/.gitkeep
+
+# Vercel
+.vercel
+
+# Sistema
+.DS_Store
+*.pem
+*.log
+npm-debug.log*
+
+# IDE
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts

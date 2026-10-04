@@ -1,0 +1,9 @@
+{
+  "prisma.diagnostics.enabled": false,
+  "css.lint.unknownAtRules": "ignore",
+  "scss.lint.unknownAtRules": "ignore",
+  "less.lint.unknownAtRules": "ignore",
+  "files.associations": {
+    "*.prisma": "prisma"
+  }
+}
