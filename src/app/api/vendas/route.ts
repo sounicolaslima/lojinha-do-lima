@@ -8,7 +8,7 @@ export async function POST(req: Request) {
   const venda = await prisma.venda.create({
     data: {
       clienteNome: body.clienteNome,
-      itens: JSON.stringify(body.itens), // 👈 stringify
+      itens: body.itens, 
       total: Number(body.total),
     },
   });
@@ -52,8 +52,6 @@ export async function GET(req: Request) {
     orderBy: { criadoEm: 'desc' },
   });
 
-  // 👇 Faz parse do JSON antes de retornar
-  return NextResponse.json(
-    vendas.map((v) => ({ ...v, itens: JSON.parse(v.itens) }))
-  );
+  
+ return NextResponse.json(vendas);
 }

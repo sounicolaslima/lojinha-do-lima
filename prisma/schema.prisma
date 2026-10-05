@@ -22,7 +22,7 @@ model Produto {
 model Venda {
   id                 String   @id @default(cuid())
   clienteNome        String
-  itens              String
+  itens              Json
   total              Float
   pixConferido       Boolean  @default(false)
   mercadoriaRetirada Boolean  @default(false)
