@@ -172,7 +172,7 @@ export default function HomePage() {
       Lojinha do Lima <span className="text-brand-600">💚</span>
     </p>
     <p className="text-sm text-ink-500">
-      <span className="text-base">💚</span> Feito por{' '}
+      <span className="text-base"></span> Feito por{' '}
       <span className="font-semibold text-brand-700">Nicolas Lima</span>, com
       carinho, para clientes que sempre merecem{' '}
       <span className="text-base">➕</span>
