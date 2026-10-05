@@ -43,3 +43,11 @@ npm-debug.log*
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+.env*
+
+# Ferramentas de IA / Agentes
+.agents/
+.claude/
+skills-lock.json
+.cursor/
+.aider*
