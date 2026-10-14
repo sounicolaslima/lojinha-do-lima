@@ -45,7 +45,7 @@ export default function QRPage() {
             <p className="text-ink-600 text-base max-w-md mx-auto">
               Tá na correria do dia a dia? 🚗💨
               <br />
-              Aproveite o tempo de estampagem para conhecer nossa lojinha!
+              Aproveite este tempinho para conhecer nossa lojinha!
             </p>
           </div>
 

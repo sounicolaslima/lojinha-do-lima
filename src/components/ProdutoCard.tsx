@@ -5,9 +5,15 @@ import type { Produto } from '@/types';
 import { useState } from 'react';
 
 export default function ProdutoCard({ produto }: { produto: Produto }) {
+  const items = useCart((s) => s.items);
   const add = useCart((s) => s.add);
-  const [feedback, setFeedback] = useState<'idle' | 'added'>('idle');
+  const setQty = useCart((s) => s.setQty);
+  const remove = useCart((s) => s.remove);
+  const [feedback, setFeedback] = useState(false);
+
+  const noCarrinho = items.find((i) => i.id === produto.id);
   const semEstoque = produto.estoque <= 0;
+  const estoqueBaixo = produto.estoque > 0 && produto.estoque <= 3;
 
   const handleAdd = () => {
     if (semEstoque) return;
@@ -18,11 +24,9 @@ export default function ProdutoCard({ produto }: { produto: Produto }) {
       imagemUrl: produto.imagemUrl,
       estoque: produto.estoque,
     });
-    setFeedback('added');
-    setTimeout(() => setFeedback('idle'), 1400);
+    setFeedback(true);
+    setTimeout(() => setFeedback(false), 1200);
   };
-
-  const estoqueBaixo = produto.estoque > 0 && produto.estoque <= 3;
 
   return (
     <article className="card-hover overflow-hidden flex flex-col group">
@@ -42,14 +46,18 @@ export default function ProdutoCard({ produto }: { produto: Produto }) {
           </div>
         )}
 
-        {/* Badge de estoque baixo */}
         {estoqueBaixo && !semEstoque && (
           <div className="absolute top-2 left-2 badge bg-accent-500 text-white shadow-md">
             ⚡ Últimas {produto.estoque}
           </div>
         )}
 
-        {/* Overlay de esgotado */}
+        {noCarrinho && (
+          <div className="absolute top-2 right-2 badge bg-brand-600 text-white shadow-md">
+            ✓ {noCarrinho.quantidade} no carrinho
+          </div>
+        )}
+
         {semEstoque && (
           <div className="absolute inset-0 bg-ink-900/60 backdrop-blur-sm flex items-center justify-center">
             <span className="badge bg-white text-ink-800 text-sm px-4 py-2 shadow-lg">
@@ -78,28 +86,57 @@ export default function ProdutoCard({ produto }: { produto: Produto }) {
             </div>
           </div>
 
-          <button
-            onClick={handleAdd}
-            disabled={semEstoque}
-            className={`btn text-xs px-3 py-2 transition-all ${
-              feedback === 'added'
-                ? 'bg-brand-600 text-white scale-95'
-                : 'btn-primary'
-            }`}
-            aria-label={`Adicionar ${produto.nome} ao carrinho`}
-          >
-            {feedback === 'added' ? (
-              <>
-                <span>✓</span>
-                <span className="hidden sm:inline">Adicionado</span>
-              </>
-            ) : (
-              <>
-                <span>+</span>
-                <span className="hidden sm:inline">Adicionar</span>
-              </>
-            )}
-          </button>
+          {noCarrinho ? (
+            // Já está no carrinho: mostra - qtd +
+            <div className="flex items-center gap-1">
+              <button
+                onClick={() => {
+                  if (noCarrinho.quantidade <= 1) {
+                    remove(produto.id);
+                  } else {
+                    setQty(produto.id, noCarrinho.quantidade - 1);
+                  }
+                }}
+                className="w-8 h-8 rounded-lg bg-ink-100 hover:bg-ink-200 text-ink-700 font-bold flex items-center justify-center transition"
+                aria-label="Diminuir quantidade"
+              >
+                −
+              </button>
+              <span className="w-8 text-center text-sm font-bold text-ink-900">
+                {noCarrinho.quantidade}
+              </span>
+              <button
+                onClick={() => setQty(produto.id, noCarrinho.quantidade + 1)}
+                disabled={noCarrinho.quantidade >= produto.estoque}
+                className="w-8 h-8 rounded-lg bg-brand-600 hover:bg-brand-700 text-white font-bold flex items-center justify-center transition disabled:opacity-40 disabled:cursor-not-allowed"
+                aria-label="Aumentar quantidade"
+              >
+                +
+              </button>
+            </div>
+          ) : (
+            // Não está no carrinho: botão de adicionar
+            <button
+              onClick={handleAdd}
+              disabled={semEstoque}
+              className={`btn text-xs px-3 py-2 transition-all ${
+                feedback ? 'bg-brand-600 text-white scale-95' : 'btn-primary'
+              }`}
+              aria-label={`Adicionar ${produto.nome} ao carrinho`}
+            >
+              {feedback ? (
+                <>
+                  <span>✓</span>
+                  <span className="hidden sm:inline">Adicionado</span>
+                </>
+              ) : (
+                <>
+                  <span>+</span>
+                  <span className="hidden sm:inline">Adicionar</span>
+                </>
+              )}
+            </button>
+          )}
         </div>
       </div>
     </article>

@@ -15,3 +15,12 @@ export async function PATCH(req: Request, { params }: { params: { id: string } }
   const venda = await prisma.venda.update({ where: { id: params.id }, data });
   return NextResponse.json(venda);
 }
+
+// 🆕 DELETE — excluir uma venda
+export async function DELETE(_: Request, { params }: { params: { id: string } }) {
+  const session = await getServerSession(authOptions);
+  if (!session) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+  await prisma.venda.delete({ where: { id: params.id } });
+  return NextResponse.json({ ok: true });
+}

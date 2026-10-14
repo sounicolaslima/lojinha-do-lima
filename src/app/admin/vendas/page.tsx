@@ -44,6 +44,18 @@ export default function VendasAdmin() {
     return { label: 'Aguardando Pix', cls: 'bg-amber-100 text-amber-700' };
   };
 
+  const excluir = async (v: Venda) => {
+  if (
+    !confirm(
+      `Excluir a venda de "${v.clienteNome}" no valor de R$ ${v.total.toFixed(2)}?\n\nEssa ação não pode ser desfeita.`
+    )
+  )
+    return;
+
+  await fetch(`/api/vendas/${v.id}`, { method: 'DELETE' });
+  load();
+};
+
   return (
     <div className="space-y-6">
       <h1 className="text-2xl font-extrabold">Vendas</h1>
@@ -125,6 +137,14 @@ export default function VendasAdmin() {
                     />
                     Mercadoria retirada
                   </label>
+                  <button
+                       onClick={() => excluir(v)}
+                       className="ml-auto text-xs font-semibold text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                       aria-label={`Excluir venda de ${v.clienteNome}`}
+  >
+                       🗑️ Excluir
+                  </button>     
+              
                 </div>
               </div>
             );
