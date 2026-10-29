@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import QRCode from 'qrcode';
 import { useCart } from '@/lib/cart';
 import Logo from '@/components/Logo';
+import { desbloquearAudio } from '@/lib/sons';
 
 // ══════════════════════════════════════════════════════════════
 // Gerador do payload Pix (padrão EMV BR Code)
@@ -124,6 +125,7 @@ export default function PixPage() {
   };
 
   const confirmar = async () => {
+    desbloquearAudio(); // libera o som da tela de sucesso
     setProcessing(true);
     setErro('');
     const nome = sessionStorage.getItem('lojinha_cliente') || 'Cliente';
