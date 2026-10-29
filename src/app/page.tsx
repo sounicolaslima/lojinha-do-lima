@@ -41,9 +41,11 @@ export default function HomePage() {
           <div className="flex items-center gap-2">
             <Link
               href="/admin/login"
-              className="hidden sm:inline-flex btn-ghost text-sm"
+              className="inline-flex btn-ghost text-sm"
+              aria-label="Painel Admin"
             >
-              🔐 Painel Admin
+              🔐 <span className="hidden sm:inline">Painel Admin</span>
+              <span className="sm:hidden">Admin</span>
             </Link>
             <button
               onClick={() => setCartOpen(true)}
