@@ -1,7 +1,13 @@
 'use client';
+import { useEffect } from 'react';
 import Link from 'next/link';
+import { somSucesso } from '@/lib/sons';
 
 export default function SucessoPage() {
+  useEffect(() => {
+    somSucesso();
+  }, []);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-brand-50 to-white p-4">
       <div className="card p-8 sm:p-12 text-center max-w-lg">
