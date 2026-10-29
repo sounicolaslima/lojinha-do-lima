@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
+import { enviarPushNovaVenda } from '@/lib/push';
 
 export async function POST(req: Request) {
   const body = await req.json();
@@ -25,6 +26,9 @@ export async function POST(req: Request) {
     }
   }
 
+   // Avisa o(s) celular(es) do admin (nunca derruba a venda se falhar)
+  await enviarPushNovaVenda({ clienteNome: venda.clienteNome, total: venda.total });
+  
   return NextResponse.json({ ...venda, itens: body.itens });
 }
 
