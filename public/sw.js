@@ -1,14 +1,39 @@
-// Service worker mínimo: só serve para exibir notificações no celular (Android/PWA).
+// Service worker: recebe os avisos de venda (push) mesmo com o app fechado.
 self.addEventListener('install', () => self.skipWaiting());
 self.addEventListener('activate', (e) => e.waitUntil(self.clients.claim()));
+
+self.addEventListener('push', (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { body: event.data ? event.data.text() : '' };
+  }
+  event.waitUntil(
+    self.registration.showNotification(data.title || '🛍️ Nova compra!', {
+      body: data.body || '',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      tag: 'nova-venda',
+      renotify: true,
+      vibrate: [200, 100, 200, 100, 300],
+      data: { url: data.url || '/admin/vendas' },
+    })
+  );
+});
+
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
+  const url = (event.notification.data && event.notification.data.url) || '/admin/vendas';
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((list) => {
       for (const c of list) {
-        if ('focus' in c) { c.navigate('/admin/vendas'); return c.focus(); }
+        if ('focus' in c) {
+          if ('navigate' in c) c.navigate(url);
+          return c.focus();
+        }
       }
-      return self.clients.openWindow('/admin/vendas');
+      return self.clients.openWindow(url);
     })
   );
 });
