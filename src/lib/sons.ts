@@ -90,5 +90,8 @@ export function falar(texto: string) {
 /** Alerta completo de nova venda: som + voz. */
 export function alertaNovaVenda() {
   somVenda();
-  setTimeout(() => falar('Olha a compra, Limaaa!'), 1300);
+  setTimeout(() => {
+    const audio = new Audio('/olha-a-compra.mp3');
+    audio.play().catch(() => falar('Olha a compra, Lima!'));
+  }, 1300);
 }
