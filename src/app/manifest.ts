@@ -3,8 +3,8 @@ import type { MetadataRoute } from 'next'
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: 'Meu Aplicativo',
-    short_name: 'Meu App',
+    name: 'Lojinha do Lima',
+    short_name: 'Lojinha do Lima',
     description: 'Aplicativo oficial do meu site',
     start_url: '/',
     display: 'standalone',
