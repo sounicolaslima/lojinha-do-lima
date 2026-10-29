@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSession, signOut } from 'next-auth/react';
 import Logo from '@/components/Logo';
+import AdminNotificador from '@/components/AdminNotificador';
 
 const links = [
   { href: '/admin', label: 'Dashboard', icon: '📊' },
@@ -50,6 +51,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             <div className="w-9 h-9 rounded-full bg-brand-100 text-brand-700 flex items-center justify-center font-bold">
               {(session.user?.name || 'A').charAt(0).toUpperCase()}
             </div>
+            <AdminNotificador />
             <button
               onClick={() => signOut({ callbackUrl: '/admin/login' })}
               className="btn-secondary text-sm"
