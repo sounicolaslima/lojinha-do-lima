@@ -8,6 +8,52 @@ const CHAVE = 'lojinha_alertas';
 
 type NovaVenda = { id: string; clienteNome: string; total: number };
 
+function chaveParaBytes(base64: string) {
+  const pad = '='.repeat((4 - (base64.length % 4)) % 4);
+  const raw = atob((base64 + pad).replace(/-/g, '+').replace(/_/g, '/'));
+  return Uint8Array.from(raw, (c) => c.charCodeAt(0));
+}
+
+/** Inscreve este aparelho para receber avisos mesmo com o app fechado. */
+async function inscreverPush(): Promise<boolean> {
+  try {
+    const chave = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
+    if (!chave || !('serviceWorker' in navigator) || !('PushManager' in window)) return false;
+    if (Notification.permission !== 'granted') return false;
+    await navigator.serviceWorker.register('/sw.js');
+    const reg = await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) {
+      sub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: chaveParaBytes(chave) as any,
+      });
+    }
+    const r = await fetch('/api/push/subscribe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(sub),
+    });
+    return r.ok;
+  } catch {
+    return false;
+  }
+}
+
+async function cancelarPush() {
+  try {
+    const reg = await navigator.serviceWorker?.getRegistration();
+    const sub = await reg?.pushManager.getSubscription();
+    if (!sub) return;
+    await fetch('/api/push/subscribe', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ endpoint: sub.endpoint }),
+    });
+    await sub.unsubscribe();
+  } catch {}
+}
+
 export default function AdminNotificador() {
   const [ativo, setAtivo] = useState(false);
   const [aviso, setAviso] = useState<string | null>(null);
@@ -17,7 +63,10 @@ export default function AdminNotificador() {
   // Lembra se o admin já tinha ativado os alertas
   useEffect(() => {
     try {
-      if (localStorage.getItem(CHAVE) === '1') setAtivo(true);
+      if (localStorage.getItem(CHAVE) === '1') {
+        setAtivo(true);
+        inscreverPush(); // garante que o aparelho continua inscrito
+      }
     } catch {}
   }, []);
 
@@ -93,6 +142,7 @@ export default function AdminNotificador() {
 
   const alternar = async () => {
     if (ativo) {
+      await cancelarPush();
       setAtivo(false);
       try { localStorage.setItem(CHAVE, '0'); } catch {}
       return;
@@ -107,6 +157,18 @@ export default function AdminNotificador() {
     } catch {}
     setAtivo(true);
     try { localStorage.setItem(CHAVE, '1'); } catch {}
+
+    const ok = await inscreverPush();
+    const ios = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const instalado = window.matchMedia('(display-mode: standalone)').matches;
+    const msg = ok
+      ? '✅ Alertas ligados, inclusive com o app fechado!'
+      : ios && !instalado
+      ? '⚠️ No iPhone, adicione o site à Tela de Início e ative de novo para receber com o app fechado.'
+      : '⚠️ Alertas ligados, mas só com o app aberto (permita notificações no navegador).';
+    setAviso(msg);
+    if (timerAviso.current) clearTimeout(timerAviso.current);
+    timerAviso.current = setTimeout(() => setAviso(null), 8000);
   };
 
   return (
