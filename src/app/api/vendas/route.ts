@@ -10,21 +10,12 @@ export async function POST(req: Request) {
     data: {
       clienteNome: body.clienteNome,
       itens: body.itens, 
-      total: Number(body.total),
+   total: Number(body.total),
+      // O estoque só é baixado quando a venda for finalizada
+      // (Pix conferido + Mercadoria retirada). Ver api/vendas/[id].
+      estoqueBaixado: false,
     },
   });
-
-  // Baixa de estoque
-  for (const item of body.itens) {
-    if (item.produtoId) {
-      await prisma.produto
-        .update({
-          where: { id: item.produtoId },
-          data: { estoque: { decrement: Number(item.quantidade) } },
-        })
-        .catch(() => {});
-    }
-  }
 
    // Avisa o(s) celular(es) do admin (nunca derruba a venda se falhar)
   await enviarPushNovaVenda({ clienteNome: venda.clienteNome, total: venda.total });
