@@ -22,8 +22,14 @@ export default function VendasAdmin() {
     setLoading(false);
   };
 
+  const loadRef = useRef(load);
+  loadRef.current = load;
+
   useEffect(() => {
     load();
+    const aoChegarVenda = () => loadRef.current();
+    window.addEventListener('nova-venda', aoChegarVenda);
+    return () => window.removeEventListener('nova-venda', aoChegarVenda);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
