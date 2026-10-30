@@ -26,7 +26,6 @@ model Venda {
   total              Float
   pixConferido       Boolean  @default(false)
   mercadoriaRetirada Boolean  @default(false)
-  estoqueBaixado     Boolean  @default(true)
   criadoEm           DateTime @default(now())
 }
 
