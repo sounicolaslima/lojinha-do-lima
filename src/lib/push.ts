@@ -7,7 +7,10 @@ function configurar() {
   if (configurado) return true;
   const publica = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   const privada = process.env.VAPID_PRIVATE_KEY;
-  if (!publica || !privada) return false; // push não configurado: ignora em silêncio
+  if (!publica || !privada) {
+    console.error('[push] VAPID não configurado', { publica: !!publica, privada: !!privada });
+    return false;
+  }
   webpush.setVapidDetails(
     process.env.VAPID_SUBJECT || 'mailto:admin@lojinha.com',
     publica,
@@ -17,11 +20,11 @@ function configurar() {
   return true;
 }
 
-/** Avisa todos os celulares/navegadores de admin inscritos. Nunca lança erro. */
 export async function enviarPushNovaVenda(venda: { clienteNome: string; total: number }) {
   try {
     if (!configurar()) return;
     const inscritos = await prisma.pushSubscription.findMany();
+    console.log(`[push] inscritos: ${inscritos.length}`);
     if (inscritos.length === 0) return;
 
     const valor = Number(venda.total).toLocaleString('pt-BR', {
@@ -42,8 +45,9 @@ export async function enviarPushNovaVenda(venda: { clienteNome: string; total: n
             payload,
             { TTL: 60 * 60, urgency: 'high' }
           );
+          console.log('[push] enviado para', s.endpoint.slice(0, 50));
         } catch (e: any) {
-          // Inscrição expirada ou removida: limpa do banco
+          console.error('[push] falhou', e?.statusCode, e?.body || e?.message);
           if (e?.statusCode === 404 || e?.statusCode === 410) {
             await prisma.pushSubscription
               .delete({ where: { endpoint: s.endpoint } })
@@ -53,6 +57,6 @@ export async function enviarPushNovaVenda(venda: { clienteNome: string; total: n
       })
     );
   } catch (e) {
-    console.error('Falha ao enviar push:', e);
+    console.error('[push] erro geral:', e);
   }
 }
