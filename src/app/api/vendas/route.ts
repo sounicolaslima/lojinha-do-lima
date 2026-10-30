@@ -2,14 +2,14 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth';
-
+import { enviarPushNovaVenda } from '@/lib/push';
 
 export async function POST(req: Request) {
   const body = await req.json();
   const venda = await prisma.venda.create({
     data: {
       clienteNome: body.clienteNome,
-      itens: body.itens, 
+      itens: body.itens,
       total: Number(body.total),
     },
   });
@@ -25,7 +25,10 @@ export async function POST(req: Request) {
         .catch(() => {});
     }
   }
-  
+
+  // Avisa os celulares dos admins inscritos (com await, senão a Vercel corta a função)
+  await enviarPushNovaVenda({ clienteNome: venda.clienteNome, total: venda.total });
+
   return NextResponse.json({ ...venda, itens: body.itens });
 }
 
@@ -53,6 +56,5 @@ export async function GET(req: Request) {
     orderBy: { criadoEm: 'desc' },
   });
 
-  
- return NextResponse.json(vendas);
+  return NextResponse.json(vendas);
 }
