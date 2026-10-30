@@ -11,11 +11,14 @@ function configurar() {
     console.error('[push] VAPID não configurado', { publica: !!publica, privada: !!privada });
     return false;
   }
-  webpush.setVapidDetails(
-    process.env.VAPID_SUBJECT || 'mailto:admin@lojinha.com',
-    publica,
-    privada
-  );
+
+  // O web-push exige uma URL válida: se vier só o e-mail, adiciona o "mailto:"
+  let assunto = (process.env.VAPID_SUBJECT || 'mailto:admin@lojinha.com').trim();
+  if (!/^(mailto:|https?:\/\/)/i.test(assunto)) {
+    assunto = `mailto:${assunto}`;
+  }
+
+  webpush.setVapidDetails(assunto, publica, privada);
   configurado = true;
   return true;
 }
