@@ -9,6 +9,13 @@ self.addEventListener('push', (event) => {
   } catch (e) {
     data = { body: event.data ? event.data.text() : '' };
   }
+
+  event.waitUntil(
+  self.clients
+    .matchAll({ type: 'window', includeUncontrolled: true })
+    .then((list) => list.forEach((c) => c.postMessage({ tipo: 'nova-venda' })))
+);
+
   event.waitUntil(
     self.registration.showNotification(data.title || '🛍️ Nova compra!', {
       body: data.body || '',

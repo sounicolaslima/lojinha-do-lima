@@ -60,6 +60,14 @@ export default function AdminNotificador() {
   const cursor = useRef<string | null>(null);
   const timerAviso = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  useEffect(() => {
+  const onMsg = (e: MessageEvent) => {
+    if (e.data?.tipo === 'nova-venda') alertaNovaVenda();
+  };
+  navigator.serviceWorker?.addEventListener('message', onMsg);
+  return () => navigator.serviceWorker?.removeEventListener('message', onMsg);
+}, []);
+
   // Lembra se o admin já tinha ativado os alertas
   useEffect(() => {
     try {
