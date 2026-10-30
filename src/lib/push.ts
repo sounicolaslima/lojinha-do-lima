@@ -20,6 +20,7 @@ function configurar() {
   return true;
 }
 
+/** Avisa todos os celulares/navegadores de admin inscritos. Nunca lança erro. */
 export async function enviarPushNovaVenda(venda: { clienteNome: string; total: number }) {
   try {
     if (!configurar()) return;
@@ -48,6 +49,7 @@ export async function enviarPushNovaVenda(venda: { clienteNome: string; total: n
           console.log('[push] enviado para', s.endpoint.slice(0, 50));
         } catch (e: any) {
           console.error('[push] falhou', e?.statusCode, e?.body || e?.message);
+          // Inscrição expirada ou removida: limpa do banco
           if (e?.statusCode === 404 || e?.statusCode === 410) {
             await prisma.pushSubscription
               .delete({ where: { endpoint: s.endpoint } })
