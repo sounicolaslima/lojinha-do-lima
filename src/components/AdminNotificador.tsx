@@ -5,6 +5,7 @@ import { alertaNovaVenda, desbloquearAudio, somVenda } from '@/lib/sons';
 
 const INTERVALO_MS = 8000;
 const CHAVE = 'lojinha_alertas';
+const JANELA_SOM_MS = 15000; // evita a voz tocar duas vezes (push + polling)
 
 type NovaVenda = { id: string; clienteNome: string; total: number };
 
@@ -59,14 +60,14 @@ export default function AdminNotificador() {
   const [aviso, setAviso] = useState<string | null>(null);
   const cursor = useRef<string | null>(null);
   const timerAviso = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const ultimoSom = useRef(0);
 
-  useEffect(() => {
-  const onMsg = (e: MessageEvent) => {
-    if (e.data?.tipo === 'nova-venda') alertaNovaVenda();
-  };
-  navigator.serviceWorker?.addEventListener('message', onMsg);
-  return () => navigator.serviceWorker?.removeEventListener('message', onMsg);
-}, []);
+  /** Toca a voz no máximo uma vez por janela, não importa de onde veio o gatilho. */
+  const tocarVoz = useCallback(() => {
+    if (Date.now() - ultimoSom.current < JANELA_SOM_MS) return;
+    ultimoSom.current = Date.now();
+    alertaNovaVenda();
+  }, []);
 
   // Lembra se o admin já tinha ativado os alertas
   useEffect(() => {
@@ -85,39 +86,52 @@ export default function AdminNotificador() {
     return () => window.removeEventListener('pointerdown', liberar);
   }, []);
 
-  const notificar = useCallback(async (vendas: NovaVenda[]) => {
-    alertaNovaVenda();
+  // O service worker avisa quando chega um push: toca a voz na hora,
+  // mesmo com o app em segundo plano (sem esperar o próximo ciclo do polling)
+  useEffect(() => {
+    const onMsg = (e: MessageEvent) => {
+      if (e.data?.tipo === 'nova-venda') tocarVoz();
+    };
+    navigator.serviceWorker?.addEventListener('message', onMsg);
+    return () => navigator.serviceWorker?.removeEventListener('message', onMsg);
+  }, [tocarVoz]);
 
-    const brl = (v: number) =>
-      v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
-    const titulo = vendas.length === 1 ? '🛍️ Nova compra!' : `🛍️ ${vendas.length} novas compras!`;
-    const corpo =
-      vendas.length === 1
-        ? `${vendas[0].clienteNome} — ${brl(vendas[0].total)}`
-        : vendas.map((v) => v.clienteNome).join(', ');
+  const notificar = useCallback(
+    async (vendas: NovaVenda[]) => {
+      tocarVoz();
 
-    setAviso(`${titulo} ${corpo}`);
-    if (timerAviso.current) clearTimeout(timerAviso.current);
-    timerAviso.current = setTimeout(() => setAviso(null), 10000);
+      const brl = (v: number) =>
+        v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+      const titulo = vendas.length === 1 ? '🛍️ Nova compra!' : `🛍️ ${vendas.length} novas compras!`;
+      const corpo =
+        vendas.length === 1
+          ? `${vendas[0].clienteNome} — ${brl(vendas[0].total)}`
+          : vendas.map((v) => v.clienteNome).join(', ');
 
-    // Notificação do sistema (barra de notificações do celular)
-    try {
-      if ('Notification' in window && Notification.permission === 'granted') {
-        const opts: any = {
-          body: corpo,
-          icon: '/icons/icon-192.png',
-          tag: 'nova-venda',
-          renotify: true,
-          vibrate: [200, 100, 200],
-        };
-        const reg = await navigator.serviceWorker?.getRegistration();
-        if (reg) reg.showNotification(titulo, opts);
-        else new Notification(titulo, opts);
-      }
-    } catch {}
+      setAviso(`${titulo} ${corpo}`);
+      if (timerAviso.current) clearTimeout(timerAviso.current);
+      timerAviso.current = setTimeout(() => setAviso(null), 10000);
 
-    window.dispatchEvent(new Event('nova-venda'));
-  }, []);
+      // Notificação do sistema (barra de notificações do celular)
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          const opts: any = {
+            body: corpo,
+            icon: '/icons/icon-192.png',
+            tag: 'nova-venda',
+            renotify: true,
+            vibrate: [200, 100, 200],
+          };
+          const reg = await navigator.serviceWorker?.getRegistration();
+          if (reg) reg.showNotification(titulo, opts);
+          else new Notification(titulo, opts);
+        }
+      } catch {}
+
+      window.dispatchEvent(new Event('nova-venda'));
+    },
+    [tocarVoz]
+  );
 
   // Consulta o servidor a cada poucos segundos
   useEffect(() => {

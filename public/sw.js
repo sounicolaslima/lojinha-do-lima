@@ -10,23 +10,22 @@ self.addEventListener('push', (event) => {
     data = { body: event.data ? event.data.text() : '' };
   }
 
-  event.waitUntil(
-  self.clients
+  // Avisa a página aberta (mesmo em segundo plano) para tocar a voz
+  const avisarPaginas = self.clients
     .matchAll({ type: 'window', includeUncontrolled: true })
-    .then((list) => list.forEach((c) => c.postMessage({ tipo: 'nova-venda' })))
-);
+    .then((list) => list.forEach((c) => c.postMessage({ tipo: 'nova-venda' })));
 
-  event.waitUntil(
-    self.registration.showNotification(data.title || '🛍️ Nova compra!', {
-      body: data.body || '',
-      icon: '/icons/icon-192.png',
-      badge: '/icons/icon-192.png',
-      tag: 'nova-venda',
-      renotify: true,
-      vibrate: [200, 100, 200, 100, 300],
-      data: { url: data.url || '/admin/vendas' },
-    })
-  );
+  const mostrar = self.registration.showNotification(data.title || '🛍️ Nova compra!', {
+    body: data.body || '',
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    tag: 'nova-venda',
+    renotify: true,
+    vibrate: [200, 100, 200, 100, 300],
+    data: { url: data.url || '/admin/vendas' },
+  });
+
+  event.waitUntil(Promise.all([avisarPaginas, mostrar]));
 });
 
 self.addEventListener('notificationclick', (event) => {
