@@ -14,17 +14,6 @@ export async function POST(req: Request) {
     },
   });
 
-  // Baixa de estoque
-  for (const item of body.itens) {
-    if (item.produtoId) {
-      await prisma.produto
-        .update({
-          where: { id: item.produtoId },
-          data: { estoque: { decrement: Number(item.quantidade) } },
-        })
-        .catch(() => {});
-    }
-  }
 
   // Avisa os celulares dos admins inscritos (com await, senão a Vercel corta a função)
   await enviarPushNovaVenda({ clienteNome: venda.clienteNome, total: venda.total });
